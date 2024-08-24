@@ -1,0 +1,21 @@
+hikers:
+- name: A
+  speed: 100
+- name: B
+  speed: 50
+- name: C
+  speed: 20
+- name: D
+  speed: 10
+bridges:
+- length: 100
+- length: 250
+  hikers:
+  - name: E
+    speed: 2.5
+- length: 150
+  hikers:
+  - name: F
+    speed: 25
+  - name: G
+    speed: 15

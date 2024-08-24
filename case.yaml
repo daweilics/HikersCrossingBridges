@@ -1,0 +1,11 @@
+hikers:
+- name: A
+  speed: 100
+- name: B
+  speed: 50
+- name: C
+  speed: 20
+- name: D
+  speed: 10
+bridges:
+- length: 100
