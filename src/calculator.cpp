@@ -1,18 +1,19 @@
 #include "calculator.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <iterator>
 #include <iostream>
 #include <sstream>
+
 #include "cache.h"
+
 
 using std::string;
 using std::vector;
-
 
 double CrossingTimeCalculator::calcCrossingTime(const vector<Bridge>& bridges,
     const vector<Hiker>& origHikers, bool verbose) {
@@ -32,10 +33,13 @@ double CrossingTimeCalculator::calcCrossingTime(const vector<Bridge>& bridges,
         if (timeCache_) {
             perFeetTime = timeCache_->getTime(hikerCount);
         }
+        // Got cached time.
         if (perFeetTime > 0) {
             totalTime += perFeetTime * bridge.getLength();
-            std::cerr << "Hit cache for hiker count " << hikerCount <<
-                " at bridge with length " << bridge.getLength() << std::endl;
+            if (verbose) {
+                std::cout << "Hit cache for hiker count " << hikerCount <<
+                    " at bridge with length " << bridge.getLength() << std::endl;
+            }
             continue;
         }
         perFeetTime = calcPerFeetTime(origHikers, bridge.getAdditionalHikers(), verbose);
@@ -77,7 +81,7 @@ double CrossingTimeCalculator::calcThresholdSpeed(double fastest, double second)
 
 size_t CrossingTimeCalculator::countSpeedSlowerThan(const vector<Hiker>& hikers,
     double thresholdSpeed) {
-    // Can use binary search since hikers are sorted by speed.
+    // TODO: Can use binary search since hikers are sorted by speed.
     auto it = std::find_if(hikers.begin(), hikers.end(),
         [thresholdSpeed](const Hiker& hiker) {
             return hiker.getSpeed() < thresholdSpeed;
@@ -87,7 +91,7 @@ size_t CrossingTimeCalculator::countSpeedSlowerThan(const vector<Hiker>& hikers,
 
 // Similar to the logic of merging two sorted arrays, but we do not need
 // to really remove the item to reduce memory operations.
-Hiker CrossingTimeCalculator::removeSlowestHiker(const vector<Hiker>& hikers,
+const Hiker& CrossingTimeCalculator::removeSlowestHiker(const vector<Hiker>& hikers,
     const vector<Hiker>& additionalHikers,
     int& index, int& additionalIndex) {
     if (index >= 0 && additionalIndex >= 0) {
@@ -161,14 +165,19 @@ double CrossingTimeCalculator::calcPerFeetTime(const vector<Hiker>& hikers,
             }
         }
     }
+    // If there are any remaining additional hikers, help them cross the
+    // bridge one by one is the fastest way.
     if (additionalIndex >= 0) {
         perFeetTime += calcPerFeetTimeHikerHelpsHikers(hikerLead, additionalHikers,
             additionalIndex, 0, true, verbose);
     }
+    // For the remaining hikers (if any) except the fastest and the second,
+    // help them cross the bridge one by one.
     if (index > 1) {
         perFeetTime += calcPerFeetTimeHikerHelpsHikers(hikerLead, hikers,
             index, 2, true, verbose);
     }
+    // For the fastest and the second, cross together, no return.
     perFeetTime += hikers[1].getPerFeetTime();
     if (verbose) {
         std::cout << hikerLeadName << "," << hikers[1].getName()

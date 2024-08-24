@@ -26,7 +26,7 @@ protected:
 
     // Similar to the logic of merging two sorted arrays, but we do not need
     // to really remove the item to reduce memory operations.
-    Hiker removeSlowestHiker(const std::vector<Hiker>& hikers,
+    const Hiker& removeSlowestHiker(const std::vector<Hiker>& hikers,
         const std::vector<Hiker>& additionalHikers,
         int& index, int& additionalIndex);
 

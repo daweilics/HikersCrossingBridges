@@ -88,6 +88,10 @@ The intuition is that, if two hikers' speeds are extremely slow, we should group
 
 So, our general approach at each step is to group the two slowest hikers (who are still at the beginning of the brideg) together if their speeds are slower than the threshold. Of course, we need to consider whether the total number of such hikers is even or odd. If the number is even, we have perfect groups.If the number is odd, we deal with the last such hiker separately.
 
+Additional strategies we use achieve the minimum crossing time:
+- Only the fastest and second fastest hiker in the original group will carry the torch back.
+- When we don't have "extremely" slow hikers, we always let the fastest hiker to accompany a slower hiker to the other side, and the fastest hiker will carry the torch back.
+
 # Results of simple test cases
 Result of the first test case:
 
