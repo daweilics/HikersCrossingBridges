@@ -5,7 +5,7 @@ This repo include the solution to the HikersCrossingBridges problem.
 
 # Dependency:
 We use an existing yaml parsing library (https://github.com/jbeder/yaml-cpp.git) for parsing yaml files. 
-Instructions to get the dependency:
+Instructions to get the dependency: (do the following in the parent folder of the project folder)
 ```
 $ git clone https://github.com/jbeder/yaml-cpp.git
 $ cd yaml-cpp
@@ -13,12 +13,20 @@ $ mkdir build & cd build
 $ cmake ..
 $ make && make install 
 ```
+(May need sudo for installation.) 
 
 # Build and run the project:
 
-In the root directory of the project:
+Change directory into the root directory of the project:
 ```
-$ g++ -o hiker -lyaml-cpp -std=c++11 -Wc++11-extensions main.cpp
+$ g++ -o hiker -std=c++11 -Iinclude -Isrc ../yaml-cpp/src/*.cpp main.cpp src/*.cpp
+```
+
+Example layout of the project (the parent directory being `~/tmp`):
+```
+~/tmp/
+ --yaml-cpp/
+ --HikersCrossingBridges/
 ```
 
 Some test cases have been included in the code. To run these test cases without supplying a yaml file:
@@ -41,15 +49,15 @@ We have the following classes:
 - YAMLCaseParser
 - CaseParser
 
-Hiker and Bridge are models for the hikers and bridges. 
+`Hiker` and `Bridge` are models for the hikers and bridges. 
 
 We create the Cache class to save previous calculation result, as it may be possible to reuse the previous result. If we can reuse the previous result, we call it a cache hit. The cache hit happens when there aren't any additional hikers at a new bridge; that is, the whole group is the same as when we are at the previous bridge. We can reuse the previous per feet time, and just calculate the new time needed to cross the current bridge for the whole group.
 
-The main logic of calculation is in the CrossingTimeCalculator class.
+The main logic of calculation is in the `CrossingTimeCalculator` class.
 
-YamlCaseParser is the class to parse a test case from a YAML file. 
+`YAMLCaseParser` is the class to parse a test case from a YAML file. 
 
-CaseParser is the class to parse a test case from a string representation. This string representation: `"A 100,B 50,C 20,D 10;100;250,E 2.5;150,F 25,G 15"` means:
+`CaseParser` is the class to parse a test case from a string representation. This string representation: `"A 100,B 50,C 20,D 10;100;250,E 2.5;150,F 25,G 15"` means:
 - there are 4 original hikers: A (speed 100), B (speed 50), C (speed 20), and D (speed 10). 
 - there are 3 bridges: the first bridge's length is 100, and it has no additional hikers; the second bridge's length is 250 and it has one additional hiker, E (speed 2.5); the third bridge's length is 150, and it has two additional hikers: F (speed 25) and G (speed 15).
 This helps us run the main logic on some simple test cases before figuring out how to do yaml parsing.
@@ -58,11 +66,27 @@ This helps us run the main logic on some simple test cases before figuring out h
 # Main solution logic
 The main logic of calculation is in the CrossingTimeCalculator class. Since the total time of crossing a bridge is proportional to the bridge length, we calcule the perFeetTime give a group of original hikers and additional hikers. With the perFeetTime, the total time will just be the length of the bridge (in feet) times the perFeetTime.
 
-We deal with the simple case when there is only one original hiker in `calcOneOrigHikerPerFeetTime()`.
+We deal with the simple case when there is only one original hiker (`if (hikers.size() == 1)`).
 
-For the general case, there is a threshold value (calculated in `calcThresholdSpeed`) that guides us how to schedule the hikers to cross the bridge. Assume that there are two original hikers.
+For the general case when we have at least two original hikers, there is a threshold value (calculated in `calcThresholdSpeed`) that guides us how to schedule the hikers to cross the bridge. Assume that we have 4 hikers, A, B, C, D, speeds sorted in the reverse order. 
 
+If the slowest two hikers' speeds are smaller then the threshold value, the fastest plan is:
+- A, B cross the bridge
+- A carries the torch back
+- C, and D cross the bridge
+- B carries the torch back
+- A, B cross the bridge
 
+If the slowest two hikers' speeds are greater then the threshold value, the fastest plan is:
+- A, B cross the bridge
+- A carries the torch back
+- A, C cross the bridge
+- A carries the torch back
+- A, D cross the bridge
+
+The intuition is that, if two hikers' speeds are extremely slow, we should group them together to reduce the overall crossing time, so that an "extremely long" trip only happens once; if they are not grouped together, we will have two rounds of the "extremely long" trips, making the overall crossing time larger compared. This observation can be applied to general cases when the number of hikers are arbitrary. 
+
+So, our general approach at each step is to group the two slowest hikers (who are still at the beginning of the brideg) together if their speeds are slower than the threshold. Of course, we need to consider whether the total number of such hikers is even or odd. If the number is even, we have perfect groups.If the number is odd, we deal with the last such hiker separately.
 
 # Results of simple test cases
 Result of the first test case:
@@ -88,7 +112,8 @@ A,B cross
 245 minute(s)
 P
 ```
-4 hikers, 3 briges. Note that although the third bridge only has F and G as the additional hikers in the input, when we do the calculations, we should also consider E as an additional hiker, because at each bridge, we need to consider all accumulated additional hikers encountered at the current bridge and at previous bridges.
+In this first test case, there are 4 hikers and 3 briges. Note that although the third bridge only has F and G as the additional hikers in the input, when we do the calculations, we should also consider E as an additional hiker at the third bridge. This is because at each bridge, we need to consider all accumulated additional hikers encountered at the current bridge and at previous bridges. `P` at the end of the test case means the test passes.
+
 
 Results of more test cases:
 ```
