@@ -31,6 +31,6 @@
 *.out
 *.app
 
-build/
-hiker
-run_tests
+/build/
+/hiker
+/run_tests
