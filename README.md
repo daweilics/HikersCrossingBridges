@@ -1,34 +1,29 @@
 
 
-This repo include the solution to the HikersCrossingBridges problem.
+This repo hosts the solution to the HikersCrossingBridges problem.
 
 
-# Dependency:
+# Dependency
 We use an existing yaml parsing library (https://github.com/jbeder/yaml-cpp.git) for parsing yaml files. 
-Instructions to get the dependency: (do the following in the parent folder of the project folder)
-```
-$ git clone https://github.com/jbeder/yaml-cpp.git
-$ cd yaml-cpp
-$ mkdir build & cd build
-$ cmake ..
-$ make && make install 
-```
-(May need sudo for installation.) 
+We plan to use googletest (https://github.com/google/googletest.git) for unit test.
+We use these two repos as submodules in our project.
 
-# Build and run the project:
-
-Change directory into the root directory of the project:
+To use the project, 
 ```
-$ g++ -o hiker -std=c++11 -Iinclude -Isrc ../yaml-cpp/src/*.cpp main.cpp src/*.cpp
+$ git clone --recurse-submodules https://github.com/daweilics/HikersCrossingBridges.git
+```
+Or, clone the project first, and then bring in the submodules.
+```
+$ git clone https://github.com/daweilics/HikersCrossingBridges.git
+$ cd HikersCrossingBridges
+$ git submodule update --init --recursive
 ```
 
-Example layout of the project (the parent directory being `~/tmp`):
+# Build and run the project
+Build the project, in the root directory (`HikersCrossingBridges`) of the project: 
 ```
-~/tmp/
- --yaml-cpp/
- --HikersCrossingBridges/
+$ make
 ```
-
 Some test cases have been included in the code. To run these test cases without supplying a yaml file:
 ```
 $ ./hiker
@@ -37,8 +32,17 @@ $ ./hiker
 To run a test case specified in a yaml file:
 ```
 $ ./hiker case.yaml
+$ ./hiker golden-case.yaml
 ```
 
+We have a plan for unit test:
+```
+$ make test
+```
+This will generate a run_tests executable in the project folder. Run unit tests as follows:
+```
+$ ./run_tests
+```
 
 # Overview of the code
 We have the following classes:
@@ -51,9 +55,9 @@ We have the following classes:
 
 `Hiker` and `Bridge` are models for the hikers and bridges. 
 
-We create the Cache class to save previous calculation result, as it may be possible to reuse the previous result. If we can reuse the previous result, we call it a cache hit. The cache hit happens when there aren't any additional hikers at a new bridge; that is, the whole group is the same as when we are at the previous bridge. We can reuse the previous per feet time, and just calculate the new time needed to cross the current bridge for the whole group.
+We use the `Cache` class to save previous calculation result, as it may be possible to reuse the previous result. If we can reuse the previous result, we call it a cache hit. The cache hit happens when there aren't any additional hikers at a new bridge; that is, the whole group is the same as when we are at the previous bridge. We can reuse the previous per feet time, and just calculate the new time needed to cross the current bridge for the whole group. We believe further optimizations may be possible for various cases. For example, if all new additinoal hikers are faster than all previous hikers, the new hikers shouldn't affect the scheduling plan of the previous hikers, and thus, the result for the previous hikers may be reused.
 
-The main logic of calculation is in the `CrossingTimeCalculator` class.
+The main logic of calculation is in the `CrossingTimeCalculator` class. We avoid removing items from the hikers list (which could be expensive operations) during the calculation,  and just use index traversing to simulate removing an item.
 
 `YAMLCaseParser` is the class to parse a test case from a YAML file. 
 
@@ -91,6 +95,7 @@ So, our general approach at each step is to group the two slowest hikers (who ar
 Additional strategies we use achieve the minimum crossing time:
 - Only the fastest and second fastest hiker in the original group will carry the torch back.
 - When we don't have "extremely" slow hikers, we always let the fastest hiker to accompany a slower hiker to the other side, and the fastest hiker will carry the torch back.
+- When there are `n (n >= 2)` hikers, there will be `n - 1` forward trips, and `n - 2` backward trips for all the hikers to cross the bridge.
 
 # Results of simple test cases
 Result of the first test case:

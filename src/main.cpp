@@ -71,7 +71,7 @@ struct TestCase {
 
 void run_tests()
 {
-    bool verbose = true;
+    bool verbose = true; // TODO: make it a parameter
     TestCase cases[] = {
         {245, "A 100,B 50,C 20,D 10;100;250,E 2.5;150,F 25,G 15"},
         {1, "A 100;100"},
